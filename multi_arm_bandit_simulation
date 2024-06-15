@@ -1,0 +1,76 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+class MultiArmedBandit:
+    def __init__(self, k_arms, epsilon=0.1):
+        self.k = k_arms
+        self.epsilon = epsilon
+        self.counts = np.zeros(self.k)
+        self.values = np.zeros(self.k)
+
+    def select_arm(self):
+        if np.random.rand() > self.epsilon:
+            return np.argmax(self.values)
+        else:
+            return np.random.randint(0, self.k)
+
+    def update(self, chosen_arm, reward):
+        self.counts[chosen_arm] += 1
+        n = self.counts[chosen_arm]
+        value = self.values[chosen_arm]
+        new_value = ((n - 1) / float(n)) * value + (1 / float(n)) * reward
+        self.values[chosen_arm] = new_value
+
+# Example game setup
+combat_tactics = ["Aggressive", "Defensive", "Balanced"]
+bandit = MultiArmedBandit(k_arms=len(combat_tactics), epsilon=0.1)
+
+# Track the number of times each tactic is chosen over time
+choices_over_time = {tactic: [] for tactic in combat_tactics}
+
+# Simulating game rounds
+num_rounds = 100
+for round in range(num_rounds):
+    chosen_arm = bandit.select_arm()
+    tactic = combat_tactics[chosen_arm]
+    
+    # Simulate effectiveness of the tactic (reward)
+    if tactic == "Aggressive":
+        reward = np.random.choice([0, 1], p=[0.4, 0.6])
+    elif tactic == "Defensive":
+        reward = np.random.choice([0, 1], p=[0.5, 0.5])
+    else:  # "Balanced"
+        reward = np.random.choice([0, 1], p=[0.3, 0.7])
+    
+    bandit.update(chosen_arm, reward)
+    
+    # Update choices over time
+    for t in combat_tactics:
+        choices_over_time[t].append(bandit.counts[combat_tactics.index(t)])
+
+# Plotting the results
+plt.style.use('dark_background')
+plt.figure(figsize=(12, 6))
+
+# Define colors
+colors = {'Aggressive': 'cyan', 'Defensive': 'magenta', 'Balanced': 'yellow'}
+
+for tactic in combat_tactics:
+    plt.plot(range(num_rounds), choices_over_time[tactic], label=tactic, color=colors[tactic], linewidth=2)
+
+plt.xlabel('Rounds', fontsize=14, fontweight='bold', color='white')
+plt.ylabel('Number of Choices', fontsize=14, fontweight='bold', color='white')
+plt.title('Number of Choices for Each Combat Tactic Over Time', fontsize=16, fontweight='bold', color='white')
+plt.legend(fontsize=12)
+plt.grid(True, color='gray', linestyle='--', linewidth=0.5)
+plt.xticks(fontsize=12, color='white')
+plt.yticks(fontsize=12, color='white')
+
+# Enhance figure border and grid
+plt.gca().spines['top'].set_color('white')
+plt.gca().spines['bottom'].set_color('white')
+plt.gca().spines['left'].set_color('white')
+plt.gca().spines['right'].set_color('white')
+
+plt.tight_layout()
+plt.show()
